@@ -11,6 +11,10 @@ app = Flask(__name__)
 CORS(app)
 app.secret_key="t34s"
 
+@app.route('/', methods=['POST'])
+def main():
+    return 'Server is running', 200
+
 @app.route('/upload', methods=['POST'])
 def upload_image():
     if 'image' not in request.files:
