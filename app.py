@@ -11,6 +11,11 @@ app = Flask(__name__)
 CORS(app)
 app.secret_key="t34s"
 
+with open("model/cnames.txt", "r") as file:
+    class_names = eval(file.read())
+print("Loading main model...")
+model = tf.keras.models.load_model("model/model.h5")
+
 @app.route('/', methods=['POST'])
 def main():
     return 'Server is running', 200
@@ -30,15 +35,16 @@ def upload_image():
     if image.mode == 'RGBA':
         image = image.convert('RGB')
 
-    image.save('uploads/uploaded_image.jpg')
+    image_bytes = io.BytesIO()
+    image.save(image_bytes, format='JPEG')
+    image_size = image_bytes.tell()
     
-    if os.path.getsize('uploads/uploaded_image.jpg') > 10485760:
+    if image_size > 10485760:
         return 'Image size exceeds 10MB', 400
 
-    image = tf.keras.utils.load_img('uploads/uploaded_image.jpg', target_size=(480, 480))
-    input_arr = tf.keras.utils.img_to_array(image)
-    input_arr = np.array([input_arr])
-    input_arr = tf.image.resize(input_arr,(480, 480))
+    image = image.resize((480, 480))
+    input_arr = np.array(image)
+    input_arr = np.expand_dims(input_arr, axis=0)  
     predictions = model.predict(input_arr, verbose = 0)
 
     score = tf.nn.softmax(predictions[0])
@@ -62,13 +68,7 @@ def upload_image():
     for i in range(k):
         print(top_classes[i], top_scores[i])
 
-    os.remove('uploads/uploaded_image.jpg')
-
     return jsonify({'predictions':top_classes, 'scores': top_scores}) , 200
 
 if __name__ == '__main__':
-    with open("model/cnames.txt", "r") as file:
-        class_names = eval(file.read())
-    print("Loading main model...")
-    model = tf.keras.models.load_model("model/model.h5")
     app.run(debug=True)
