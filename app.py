@@ -13,8 +13,9 @@ app.secret_key="t34s"
 
 with open("model/cnames.txt", "r") as file:
     class_names = eval(file.read())
-print("Loading main model...")
+print("Loading main model...", flush=True)
 model = tf.keras.models.load_model("model/model.h5")
+print("Model loaded successfully", flush=True)
 
 @app.route('/', methods=['POST'])
 def main():
@@ -57,16 +58,16 @@ def upload_image():
     elif max_score > 0.25:
         k = 1
     else:
-        print("No predictions made")
+        print("No predictions made", flush=True)
         return jsonify({'predictions':[], 'scores':[]}), 200
 
     top_values, top_indices = tf.nn.top_k(predictions[0], k=k)
     top_classes = [class_names[idx] for idx in top_indices]
     top_scores = [float(score[idx]) for idx in top_indices]
 
-    print(f"Top {k} predictions: ")
+    print(f"Top {k} predictions: ", flush=True)
     for i in range(k):
-        print(top_classes[i], top_scores[i])
+        print(top_classes[i], top_scores[i], flush=True)
 
     return jsonify({'predictions':top_classes, 'scores': top_scores}) , 200
 
