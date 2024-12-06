@@ -165,3 +165,4 @@ model/*
 !model/model.h5
 !model/cnames.txt
 uploads/
+*.h5
